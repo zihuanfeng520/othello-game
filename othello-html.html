@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑白棋遊戲</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei UI', Arial, sans-serif;
+            background-color: #f0f8e8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            color: #006400;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .game-area {
+            margin-right: 20px;
+        }
+
+        .board {
+            background-color: #009900;
+            border: 5px solid #333;
+            padding: 10px;
+            position: relative;
+        }
+
+        .board-coordinates {
+            position: absolute;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .menu {
+            background-color: #e8f4e8;
+            border-radius: 10px;
+            border: 2px solid #006400;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        .game-info {
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #e8f4e8;
+            border: 2px solid #006400;
+            margin-top: 20px;
+            width: 480px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #006400;
+        }
+
+        .scores {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .score {
+            display: flex;
+            align-items: center;
+        }
+
+        .piece-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .black {
+            background-color: #000;
+        }
+
+        .white {
+            background-color: #fff;
+            border: 1px solid #000;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        button {
+            background-color: #006400;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #008800;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .thinking {
+            color: #cc0000;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 10px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #006400;
+            margin: 10px 0;
+            background-color: #fff;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .game-end-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #f0f8e8;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #006400;
+            margin-bottom: 20px;
+        }
+
+        .ai-options button {
+            margin: 5px;
+        }
+
+        .help-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+        }
+
+        .move-history {
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        .move-history h3 {
+            margin-top: 0;
+            color: #006400;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .game-area {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .board, .game-info {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>黑白棋遊戲</h1>
+
+    <!-- 遊戲選單 -->
+    <div id="game-menu" class="menu">
+        <h2>選擇遊戲模式</h2>
+        <button id="vs-player">雙人對戰</button>
+        <button id="vs-ai">對戰電腦</button>
+        
+        <div id="ai-options" class="hidden">
+            <h3>選擇難度</h3>
+            <div class="ai-options">
+                <button data-difficulty="easy">簡單</button>
+                <button data-difficulty="normal">中等</button>
+                <button data-difficulty="hard">困難</button>
+            </div>
+            
+            <h3>選擇顏色</h3>
+            <div class="ai-options">
+                <button data-color="X">黑棋（先手）</button>
+                <button data-color="O">白棋（後手）</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲區域 -->
+    <div id="game-container" class="container hidden">
+        <div class="game-area">
+            <canvas id="board" width="480" height="480"></canvas>
+        </div>
+        
+        <div class="game-info">
+            <div class="status" id="status">黑棋回合</div>
+            
+            <div class="scores">
+                <div class="score">
+                    <span class="piece-icon black"></span>
+                    <span id="black-score">黑棋：2</span>
+                </div>
+                <div class="score">
+                    <span class="piece-icon white"></span>
+                    <span id="white-score">白棋：2</span>
+                </div>
+            </div>
+            
+            <div class="time-info">
+                <div id="black-time">黑方用時：0.0秒</div>
+                <div id="white-time">白方用時：0.0秒</div>
+            </div>
+            
+            <div id="ai-thinking" class="thinking hidden">思考中...</div>
+            
+            <div id="no-moves-prompt" class="hidden" style="color:red; margin:10px 0;">
+                無有效走法！按「跳過回合」按鈕
+            </div>
+            
+            <div class="controls">
+                <button id="undo">悔棋</button>
+                <button id="pass">跳過回合</button>
+                <button id="restart">重新開始</button>
+            </div>
+            
+            <div id="return-mode-prompt" class="hidden" style="color:red; margin-top:10px;">
+                請選擇一個要返還的棋子
+            </div>
+            
+            <div class="help-text">
+                操作說明：點擊棋盤下棋，吃掉2個以上棋子時需返還1個
+            </div>
+            
+            <div id="move-history" class="move-history">
+                <h3>走棋記錄</h3>
+                <div id="history-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲結束彈窗 -->
+    <div id="game-end-modal" class="game-end-modal hidden">
+        <div class="modal-content">
+            <h2 class="modal-title">遊戲結束</h2>
+            <div id="result"></div>
+            <div id="final-score" style="margin: 20px 0;"></div>
+            <button id="new-game">開始新遊戲</button>
+        </div>
+    </div>
+
+    <script src="othello-game.js"></script>
+</body>
+</html>
