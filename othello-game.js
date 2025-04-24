@@ -1404,5 +1404,20 @@ class SmartAI {
 
 // 初始化遊戲
 document.addEventListener("DOMContentLoaded", () => {
-    const game = new Game();
+    console.log("DOM 已加載，開始初始化遊戲");
+    
+    try {
+        const game = new Game();
+        console.log("遊戲初始化完成，當前狀態:", game.gameState);
+        
+        // 確保模態窗口初始隱藏
+        document.getElementById("game-end-modal").classList.add("hidden");
+        console.log("已確保結束模態窗口隱藏");
+        
+        // 顯示選單
+        document.getElementById("game-menu").classList.remove("hidden");
+        console.log("已顯示遊戲選單");
+    } catch (error) {
+        console.error("遊戲初始化出錯:", error);
+    }
 });
